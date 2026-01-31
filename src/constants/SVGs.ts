@@ -175,3 +175,11 @@ export const KEYSHOTS_SVG = (size: number) => `
 export const EMPTY_SVG = `
 <svg width="32" height="32" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
 `
+
+export const KEYSHOTS_LUCIDE_ICON = `
+<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect x="2" y="2" width="20" height="20" rx="3" stroke="currentColor" stroke-width="2"/>
+<rect x="5" y="2" width="14" height="14" rx="3" stroke="currentColor" stroke-width="2"/>
+<path d="M8 9C8 9 8 9 9 9C10 9 10 9 10 8C10 7 10 7 9 7C8 7 8 7 8 6C8 5 8 5 9 5C10 5 10 5 10 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+`

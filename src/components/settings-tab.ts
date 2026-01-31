@@ -24,6 +24,7 @@ const DOUBLE_KEY_OPTIONS = {
 
 export class KeyshotsSettingTab extends PluginSettingTab {
     plugin: KeyshotsPlugin;
+    icon = "keyshots";
 
     constructor(app: App, plugin: KeyshotsPlugin) {
         super(app, plugin);

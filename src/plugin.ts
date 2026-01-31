@@ -1,4 +1,4 @@
-import {Command, Hotkey, Plugin} from 'obsidian';
+import {addIcon, Command, Hotkey, Plugin} from 'obsidian';
 import KeyshotsSettings from "./model/KeyshotsSettings";
 import DoubleKeyRegistry from "./classes/DoubleKeyRegistry";
 import {KeyshotsSettingTab} from "./components/settings-tab";
@@ -60,6 +60,7 @@ import { demoteHeading, promoteHeading } from './commands/promote-demote-heading
 import { switchDefaultEditingModeSetting } from './commands/switch-default-editing-mode-setting';
 import { goToStartOfNote } from './commands/go-to-start-of-note';
 import { goToEndOfNote } from './commands/go-to-end-of-note';
+import { KEYSHOTS_LUCIDE_ICON } from './constants/SVGs';
 
 export default class KeyshotsPlugin extends Plugin {
 
@@ -147,6 +148,7 @@ export default class KeyshotsPlugin extends Plugin {
 
     async onload() {
         await this.loadSettings()
+        addIcon("keyshots", KEYSHOTS_LUCIDE_ICON)
         this.addSettingTab(new KeyshotsSettingTab(this.app, this))
         this.doubleKeyRegistry = new DoubleKeyRegistry(this)
         this.addChild(this.doubleKeyRegistry)
