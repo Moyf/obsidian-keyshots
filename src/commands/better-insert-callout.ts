@@ -4,6 +4,7 @@ import CalloutPickerModal from "../components/callout-picker-modal";
 import KeyshotsPlugin from "../plugin";
 import {HotKey} from "../utils";
 import SelectionsProcessing from "../classes/SelectionsProcessing";
+import {Notice} from "obsidian";
 
 export const betterInsertCallout: (plugin: KeyshotsPlugin) => KeyshotsCommand = (plugin) => ({
     category: Category.INSERT_COMPONENTS,
@@ -15,7 +16,9 @@ export const betterInsertCallout: (plugin: KeyshotsPlugin) => KeyshotsCommand = 
     editorCallback: (editor) => new CalloutPickerModal(
         plugin,
         (calloutId,evt) => {
+            // default state
             let foldingState = "";
+
             if (evt instanceof KeyboardEvent) {
                 if (evt.shiftKey) {
                     foldingState = "+"
@@ -24,10 +27,29 @@ export const betterInsertCallout: (plugin: KeyshotsPlugin) => KeyshotsCommand = 
                     foldingState = "-"
                 }
             } 
+
             SelectionsProcessing.selectionsProcessorTransaction(editor, sel => {
+                const selectedText = sel.getText();
+
+                const currentLineContent = editor.getLine(sel.anchor.line);
+                const nextLineNum = sel?.anchor?.line + 1;
+                const nextLineContent = editor.getLine(nextLineNum);
+
+                let convertedSel = "";
+                let ending = "";
+
+                // if next line is already a callout, do not insert a new line
+                if (currentLineContent.trim() == '' && nextLineContent.startsWith('> ')) {
+                    ending = "";
+                    new Notice(`Combine existing quote with new ${calloutId} callout.`);
+                } else {
+                    ending = "\n";
+                    convertedSel = "\n" + selectedText.split("\n").map(p => "> " + p).join("\n");
+                }
+
                 return {
                     replaceSelection: sel,
-                    replaceText: `\n>[!${calloutId}]${foldingState}\n${sel.getText().split("\n").map(p => "> " + p).join("\n")}\n`,
+                    replaceText: `\n>[!${calloutId}]${foldingState}${convertedSel}${ending}`,
                     finalSelection: sel.clone().expand().moveLines(2).moveCharsWithoutOffset(2)
                 }
             })
