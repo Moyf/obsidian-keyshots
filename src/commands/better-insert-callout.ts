@@ -41,7 +41,6 @@ export const betterInsertCallout: (plugin: KeyshotsPlugin) => KeyshotsCommand = 
                 // if next line is already a callout, do not insert a new line
                 if (currentLineContent.trim() == '' && nextLineContent.startsWith('> ')) {
                     ending = "";
-                    new Notice(`Combine existing quote with new ${calloutId} callout.`);
                 } else {
                     ending = "\n";
                     convertedSel = "\n" + selectedText.split("\n").map(p => "> " + p).join("\n");
