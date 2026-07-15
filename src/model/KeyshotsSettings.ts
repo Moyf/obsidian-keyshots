@@ -15,6 +15,7 @@ export default interface KeyshotsSettings {
     key_command_palette_via_double_key_cmd: string
 
     callouts_list: string[]
+    callout_prepend_line_break: boolean
     open_file_command: string
     modal_table_last_used_rows: number
     modal_table_last_used_columns: number

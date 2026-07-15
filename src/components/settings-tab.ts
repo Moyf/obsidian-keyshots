@@ -172,6 +172,20 @@ export class KeyshotsSettingTab extends PluginSettingTab {
                 )
             )
             .addSetting(setting => this.enhanceSetting(setting)
+                .setName("Insert line break before callout")
+                .setMarkdownDesc(`
+                    Adds an extra line break before a callout inserted with the
+                    \`Better insert callout\` command.
+                `)
+                .addToggle(cb => cb
+                    .setValue(this.plugin.settings.callout_prepend_line_break)
+                    .onChange(async (value) => {
+                        this.plugin.settings.callout_prepend_line_break = value
+                        await this.plugin.saveSettings()
+                    })
+                )
+            )
+            .addSetting(setting => this.enhanceSetting(setting)
                 .setName("Custom callout types list")
                 .setMarkdownDesc(`
                     Adds new callout types defined by user separated by new line (<kbd>Enter</kbd>),
