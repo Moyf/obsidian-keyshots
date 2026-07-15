@@ -16,6 +16,8 @@ const DEFAULT_KEYSHOTS_SETTINGS: KeyshotsSettings = {
 
     callouts_list: [],
     callout_prepend_line_break: true,
+    callout_cursor_position_with_selection: "start",
+    callout_cursor_position_without_selection: "content",
     open_file_command: "",
     modal_table_last_used_rows: 2,
     modal_table_last_used_columns: 2,

@@ -1,4 +1,8 @@
-import {CalloutEdit, createCalloutEdit} from "@/commands/better-insert-callout-edit";
+import {
+    CalloutEdit,
+    createCalloutEdit,
+    resolveCalloutCursorPosition
+} from "@/commands/better-insert-callout-edit";
 
 const createEditor = (content: string) => ({
     getLine: (line: number) => content.split("\n")[line]
@@ -21,12 +25,13 @@ describe("Better insert callout text edit", () => {
         const edit = createCalloutEdit(
             createEditor(content),
             {anchor: {line: 0, ch: 1}, head: {line: 0, ch: 2}},
-            {calloutId: "note", foldingState: "", prependLineBreak: true}
+            {calloutId: "note", foldingState: "", prependLineBreak: true, cursorPosition: "start"}
         )
 
         expect(edit.from).toEqual({line: 0, ch: 0})
         expect(edit.to).toEqual({line: 0, ch: 3})
         expect(applyEdit(content, edit)).toBe("\n>[!note]\n> ABC\n\nnext")
+        expect(edit.cursor).toEqual({line: 2, ch: 2})
     })
 
     it("places a callout above and absorbs the existing quote block", () => {
@@ -34,10 +39,11 @@ describe("Better insert callout text edit", () => {
         const edit = createCalloutEdit(
             createEditor(content),
             {anchor: {line: 0, ch: 0}, head: {line: 0, ch: 0}},
-            {calloutId: "info", foldingState: "+", prependLineBreak: false}
+            {calloutId: "info", foldingState: "+", prependLineBreak: false, cursorPosition: "start"}
         )
 
         expect(applyEdit(content, edit)).toBe(">[!info]+\n> first quote\n> second quote\nafter")
+        expect(edit.to).toEqual({line: 2, ch: 14})
         expect(edit.cursor).toEqual({line: 1, ch: 2})
     })
 
@@ -46,7 +52,7 @@ describe("Better insert callout text edit", () => {
         const edit = createCalloutEdit(
             createEditor(content),
             {anchor: {line: 0, ch: 1}, head: {line: 0, ch: 2}},
-            {calloutId: "warning", foldingState: "-", prependLineBreak: false}
+            {calloutId: "warning", foldingState: "-", prependLineBreak: false, cursorPosition: "start"}
         )
 
         expect(applyEdit(content, edit)).toBe(">[!warning]-\n> ABC\n> existing quote")
@@ -57,10 +63,70 @@ describe("Better insert callout text edit", () => {
         const edit = createCalloutEdit(
             createEditor(content),
             {anchor: {line: 0, ch: 1}, head: {line: 0, ch: 2}},
-            {calloutId: "tip", foldingState: "", prependLineBreak: false}
+            {calloutId: "tip", foldingState: "", prependLineBreak: false, cursorPosition: "start"}
         )
 
         expect(applyEdit(content, edit)).toBe(">[!tip]\n> ABC\n")
         expect(edit.cursor).toEqual({line: 1, ch: 2})
+    })
+
+    it("places the cursor at the end of the absorbed callout", () => {
+        const content = "ABC\n> first quote\n> second quote\nafter"
+        const edit = createCalloutEdit(
+            createEditor(content),
+            {anchor: {line: 0, ch: 0}, head: {line: 0, ch: 3}},
+            {calloutId: "note", foldingState: "", prependLineBreak: false, cursorPosition: "end"}
+        )
+
+        expect(edit.cursor).toEqual({line: 3, ch: 14})
+    })
+
+    it("places the cursor after the callout marker and folding state for a title", () => {
+        const content = "ABC"
+        const edit = createCalloutEdit(
+            createEditor(content),
+            {anchor: {line: 0, ch: 0}, head: {line: 0, ch: 3}},
+            {calloutId: "warning", foldingState: "-", prependLineBreak: true, cursorPosition: "title"}
+        )
+
+        expect(edit.cursor).toEqual({line: 1, ch: 12})
+    })
+
+    it("creates a blank line below the absorbed callout and places the cursor there", () => {
+        const content = "ABC\n> existing quote\nafter"
+        const edit = createCalloutEdit(
+            createEditor(content),
+            {anchor: {line: 0, ch: 0}, head: {line: 0, ch: 3}},
+            {calloutId: "tip", foldingState: "", prependLineBreak: false, cursorPosition: "below"}
+        )
+
+        expect(applyEdit(content, edit)).toBe(">[!tip]\n> ABC\n> existing quote\n\nafter")
+        expect(edit.cursor).toEqual({line: 3, ch: 0})
+    })
+})
+
+describe("Better insert callout cursor setting", () => {
+    it("uses the selected-text position when text is selected", () => {
+        expect(resolveCalloutCursorPosition(
+            {anchor: {line: 0, ch: 0}, head: {line: 0, ch: 3}},
+            "below",
+            "content"
+        )).toBe("below")
+    })
+
+    it("uses the content position for an empty selection", () => {
+        expect(resolveCalloutCursorPosition(
+            {anchor: {line: 0, ch: 1}, head: {line: 0, ch: 1}},
+            "below",
+            "content"
+        )).toBe("start")
+    })
+
+    it("uses the title position for an empty selection", () => {
+        expect(resolveCalloutCursorPosition(
+            {anchor: {line: 0, ch: 1}, head: {line: 0, ch: 1}},
+            "end",
+            "title"
+        )).toBe("title")
     })
 })

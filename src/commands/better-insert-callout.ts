@@ -5,7 +5,7 @@ import KeyshotsPlugin from "../plugin";
 import {HotKey} from "../utils";
 import SelectionsProcessing from "../classes/SelectionsProcessing";
 import EditorSelectionManipulator from "../classes/EditorSelectionManipulator";
-import {createCalloutEdit} from "./better-insert-callout-edit";
+import {createCalloutEdit, resolveCalloutCursorPosition} from "./better-insert-callout-edit";
 
 export const betterInsertCallout: (plugin: KeyshotsPlugin) => KeyshotsCommand = (plugin) => ({
     category: Category.INSERT_COMPONENTS,
@@ -30,7 +30,12 @@ export const betterInsertCallout: (plugin: KeyshotsPlugin) => KeyshotsCommand = 
                 const edit = createCalloutEdit(editor, sel, {
                     calloutId,
                     foldingState,
-                    prependLineBreak: plugin.settings.callout_prepend_line_break
+                    prependLineBreak: plugin.settings.callout_prepend_line_break,
+                    cursorPosition: resolveCalloutCursorPosition(
+                        sel,
+                        plugin.settings.callout_cursor_position_with_selection,
+                        plugin.settings.callout_cursor_position_without_selection
+                    )
                 })
 
                 return {
