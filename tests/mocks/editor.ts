@@ -75,10 +75,12 @@ export function createMockEditor(
             if (tx.changes) {
                 tx.changes.forEach((change) => {
                     const to = change.to ?? change.from;
+                    const fromOffset = posToOffset(change.from);
+                    const toOffset = posToOffset(to);
                     content =
-                        content.substring(0, posToOffset(change.from)) +
+                        content.substring(0, fromOffset) +
                         change.text +
-                        content.substring(posToOffset(to) + change.text.length);
+                        content.substring(toOffset);
                 });
             }
             if (tx.selections) {

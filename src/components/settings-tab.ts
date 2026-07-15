@@ -1,6 +1,5 @@
-import {App, MarkdownRenderer, PluginSettingTab, Setting, SettingGroup, SliderComponent} from "obsidian";
+import {App, Component, MarkdownRenderer, PluginSettingTab, Setting, SettingGroup, SliderComponent} from "obsidian";
 import KeyshotsPlugin from "../plugin";
-import {KEYSHOTS_SVG} from "../constants/SVGs";
 import {Preset, PRESETS_INFO} from "../constants/Presets";
 import DEFAULT_KEYSHOTS_SETTINGS from "../constants/DefaultKeyshotsSettings";
 import type {
@@ -32,21 +31,11 @@ interface EnhancedSetting extends Setting {
 export class KeyshotsSettingTab extends PluginSettingTab {
     plugin: KeyshotsPlugin;
     icon = "keyshots";
+    private component: Component = new Component()
 
     constructor(app: App, plugin: KeyshotsPlugin) {
         super(app, plugin);
         this.plugin = plugin;
-    }
-
-    private addPluginTitle() {
-        const title = this.containerEl.createEl('h1', {text: "Keyshots Settings"})
-        title.innerHTML = KEYSHOTS_SVG(48) + title.innerHTML
-        title.setCssProps({
-            "display": "flex", 
-            "align-items": "center", 
-            "gap": "10px",
-            "font-size": "1.5em"
-        })
     }
 
     private addSettingGroup(cb: (group: SettingGroup) => void) {
@@ -70,7 +59,7 @@ export class KeyshotsSettingTab extends PluginSettingTab {
                 .join("\n")
                 .replace(/(?<!\n)\n(?!\n)/g, ' ')
 
-            MarkdownRenderer.render(this.app, fixedMarkdown, enhancedSetting.descEl, "", this.plugin)
+            void MarkdownRenderer.render(this.app, fixedMarkdown, enhancedSetting.descEl, "", this.component)
                 .then(() => {
                     setting.descEl.querySelectorAll('p').forEach(p => {
                         p.setCssStyles({
@@ -86,17 +75,21 @@ export class KeyshotsSettingTab extends PluginSettingTab {
         return enhancedSetting
     }
 
+    hide(): void {
+        super.hide()
+        this.component.unload()
+    }
+
     display() {
         const {containerEl} = this;
         containerEl.classList.add("keyshots-settings")
         containerEl.empty()
-
-        this.addPluginTitle()
+        this.component.load()
         
         this.addSettingGroup(group => group
             .setHeading("⌨️ Default keys")
-            .addSetting(setting => this.enhanceSetting(setting)
-                .setName("IDE Keys Mapping")
+            .addSetting(setting => void this.enhanceSetting(setting)
+                .setName("IDE keys mapping")
                 .setMarkdownDesc(`
                     Change default hotkeys based on IDE, that you are comfortable with.
 
@@ -113,7 +106,8 @@ export class KeyshotsSettingTab extends PluginSettingTab {
                     })
                 )
             )
-            .addSetting(setting => this.enhanceSetting(setting)
+            .addSetting(setting => void this.enhanceSetting(setting)
+                // eslint-disable-next-line obsidianmd/ui/sentence-case
                 .setName("Default Keyshots hotkeys")
                 .setMarkdownDesc(`
                     Sets default hotkeys for keyshots commands, that are not modified by IDE preset.
@@ -134,7 +128,7 @@ export class KeyshotsSettingTab extends PluginSettingTab {
 
         this.addSettingGroup(group => group
             .setHeading("🔧 Commands settings")
-            .addSetting(setting => this.enhanceSetting(setting)
+            .addSetting(setting => void this.enhanceSetting(setting)
                 .setName("Case sensitivity")
                 .setMarkdownDesc(`
                     Determines if Keyshots commands should be case sensitive.
@@ -149,7 +143,7 @@ export class KeyshotsSettingTab extends PluginSettingTab {
                     })
                 )
             )
-            .addSetting(setting => this.enhanceSetting(setting)
+            .addSetting(setting => void this.enhanceSetting(setting)
                 .setName("Shuffle rounds amount")
                 .setMarkdownDesc(`
                     Number of rounds that will \`Shuffle selected lines\` command take.
@@ -159,7 +153,6 @@ export class KeyshotsSettingTab extends PluginSettingTab {
                     slider = cb
                         .setValue(this.plugin.settings.shuffle_rounds_amount)
                         .setLimits(1, 50, 1)
-                        .setDynamicTooltip()
                         .onChange(async (value) => {
                             this.plugin.settings.shuffle_rounds_amount = value
                             await this.plugin.saveSettings()
@@ -250,19 +243,19 @@ export class KeyshotsSettingTab extends PluginSettingTab {
 
         this.addSettingGroup(group => group
             .setHeading("🔧 JetBrains Features")
-            .addSetting(setting => this.enhanceSetting(setting)
+            .addSetting(setting => void this.enhanceSetting(setting)
                 .setName("Show double key command activity in status bar")
                 .setDesc("When toggled on, status bar icon will show up when any of double key command is enabled. It displays status of currently active double key command.")
                 .addToggle(cb => cb
                     .setValue(this.plugin.settings.show_double_key_status_bar_item)
-                    .onChange((newValue) => {
+                    .onChange(async (newValue) => {
                         this.plugin.settings.show_double_key_status_bar_item = newValue
-                        this.plugin.saveSettings()
+                        await this.plugin.saveSettings()
                         this.plugin.loadDoubleKeyCommands()
                     })
                 )
             )
-            .addSetting(setting => this.enhanceSetting(setting)
+            .addSetting(setting => void this.enhanceSetting(setting)
                 .setName("Double key caret adding shortcut")
                 .setMarkdownDesc(`
                     Everytime when you press key twice and second one you'll hold, then when you press
@@ -339,6 +332,7 @@ export class KeyshotsSettingTab extends PluginSettingTab {
                     .addDropdown(cb => {
                         const cmds = getOpenCommands(this.plugin)
                         const currSetting = this.plugin.settings.open_file_command
+                        // eslint-disable-next-line obsidianmd/ui/sentence-case
                         cb.addOption("","-- No engine selected --")
                         cb.addOptions(cmds)
                         cb.setValue(Object.keys(cmds).contains(currSetting) ? currSetting : "")
@@ -348,9 +342,9 @@ export class KeyshotsSettingTab extends PluginSettingTab {
                         })
                     })
             })
-            .addSetting(setting => this.enhanceSetting(setting)
-                .setName("Opening Command-Palette via double key shortcut")
-                .setDesc("If you have Command Palette plugin enabled, hitting twice will open command palette window.")
+            .addSetting(setting => void this.enhanceSetting(setting)
+                .setName("Opening command-palette via double key shortcut")
+                .setDesc("If you have command-palette plugin enabled, hitting twice will open command palette window.")
                 .addToggle(cb => cb
                     .setValue(this.plugin.settings.enable_command_palette_via_double_key_cmd)
                     .onChange(async (value) => {
@@ -361,6 +355,7 @@ export class KeyshotsSettingTab extends PluginSettingTab {
                     })
                 )
             )
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
             .addSetting(setting => commandPaletteKeybinding = this.enhanceSetting(setting)
                     .setClass("indent")
                     .setName("Keybinding")
